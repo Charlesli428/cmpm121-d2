@@ -1,6 +1,6 @@
 import "./style.css";
 
-document.title = "Sticker SKetchpad";
+document.title = "Sticker Sketchpad";
 document.body.innerHTML = "";
 const app = document.createElement("div");
 app.id = "app";
@@ -18,39 +18,52 @@ app.appendChild(canvas);
 
 //Step 2
 const ctx = (canvas as HTMLCanvasElement).getContext("2d")!;
-let drawing = false;
-let lastX = 0;
-let lastY = 0;
+type Point = { x: number; y: number };
+type Stroke = Point[];
+const displayList: Stroke[] = [];
+let currentStroke: Stroke | null = null;
 
-function drawLine(x1: number, y1: number, x2: number, y2: number) {
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.strokeStyle = "#000";
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.stroke();
+function dispatchDrawingChanged() {
+  canvas.dispatchEvent(new Event("drawing-changed"));
 }
 
+canvas.addEventListener("drawing-changed", () => {
+  // clear and redraw everything
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+
+  for (const stroke of displayList) {
+    if (stroke.length < 2) continue;
+    ctx.beginPath();
+    ctx.moveTo(stroke[0].x, stroke[0].y);
+    for (let i = 1; i < stroke.length; i++) {
+      ctx.lineTo(stroke[i].x, stroke[i].y);
+    }
+    ctx.stroke();
+  }
+});
+
 canvas.addEventListener("mousedown", (e) => {
-  drawing = true;
-  lastX = e.offsetX;
-  lastY = e.offsetY;
+  currentStroke = [{ x: e.offsetX, y: e.offsetY }];
+  displayList.push(currentStroke);
+  dispatchDrawingChanged();
 });
 
 canvas.addEventListener("mousemove", (e) => {
-  if (!drawing) return;
-  drawLine(lastX, lastY, e.offsetX, e.offsetY);
-  lastX = e.offsetX;
-  lastY = e.offsetY;
+  if (!currentStroke) return;
+  currentStroke.push({ x: e.offsetX, y: e.offsetY });
+  dispatchDrawingChanged();
 });
 
 canvas.addEventListener("mouseup", () => {
-  drawing = false;
+  currentStroke = null;
 });
 
 canvas.addEventListener("mouseleave", () => {
-  drawing = false;
+  currentStroke = null;
 });
 
 const clearBtn = document.createElement("button");
@@ -58,5 +71,6 @@ clearBtn.textContent = "Clear";
 app.appendChild(clearBtn);
 
 clearBtn.addEventListener("click", () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  displayList.length = 0;
+  dispatchDrawingChanged();
 });
