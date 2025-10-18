@@ -22,6 +22,7 @@ type Point = { x: number; y: number };
 type Stroke = Point[];
 const displayList: Stroke[] = [];
 let currentStroke: Stroke | null = null;
+const redoStack: Stroke[] = [];
 
 function dispatchDrawingChanged() {
   canvas.dispatchEvent(new Event("drawing-changed"));
@@ -70,7 +71,29 @@ const clearBtn = document.createElement("button");
 clearBtn.textContent = "Clear";
 app.appendChild(clearBtn);
 
+const undoBtn = document.createElement("button");
+undoBtn.textContent = "Undo";
+app.appendChild(undoBtn);
+
+const redoBtn = document.createElement("button");
+redoBtn.textContent = "Redo";
+app.appendChild(redoBtn);
+
 clearBtn.addEventListener("click", () => {
   displayList.length = 0;
+  dispatchDrawingChanged();
+});
+
+undoBtn.addEventListener("click", () => {
+  if (displayList.length === 0) return;
+  const popped = displayList.pop()!;
+  redoStack.push(popped);
+  dispatchDrawingChanged();
+});
+
+redoBtn.addEventListener("click", () => {
+  if (redoStack.length === 0) return;
+  const restored = redoStack.pop()!;
+  displayList.push(restored);
   dispatchDrawingChanged();
 });
