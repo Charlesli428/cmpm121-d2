@@ -1,5 +1,15 @@
-.icon {
-  width: 64px;
-  vertical-align: top;
-  border: 1px solid salmon;
+body {
+  font-family: system-ui, sans-serif;
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  background: #f5f5f5;
+  margin: 0;
+}
+
+#stage {
+  border: 1px solid #000;
+  border-radius: 8px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  background: white;
 }
