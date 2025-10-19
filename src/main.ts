@@ -70,7 +70,7 @@ canvas.addEventListener("mouseleave", () => {
 const clearBtn = document.createElement("button");
 clearBtn.textContent = "Clear";
 app.appendChild(clearBtn);
-
+//Comment
 const undoBtn = document.createElement("button");
 undoBtn.textContent = "Undo";
 app.appendChild(undoBtn);
