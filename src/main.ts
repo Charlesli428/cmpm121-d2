@@ -23,6 +23,7 @@ interface DisplayCommand {
 }
 function makeLineCommand(): DisplayCommand & { points: Point[] } {
   const points: Point[] = [];
+  const lineWidth = currentLineWidth;
   return {
     points,
     display(ctx) {
@@ -33,7 +34,7 @@ function makeLineCommand(): DisplayCommand & { points: Point[] } {
         ctx.lineTo(points[i].x, points[i].y);
       }
       ctx.strokeStyle = "#000";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = lineWidth;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.stroke();
@@ -44,6 +45,7 @@ type Point = { x: number; y: number };
 const displayList: DisplayCommand[] = [];
 let currentCommand: ReturnType<typeof makeLineCommand> | null = null;
 const redoStack: DisplayCommand[] = [];
+let currentLineWidth = 2;
 
 function dispatchDrawingChanged() {
   canvas.dispatchEvent(new Event("drawing-changed"));
@@ -55,7 +57,7 @@ canvas.addEventListener("drawing-changed", () => {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.strokeStyle = "#000";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = currentLineWidth;
 
   for (const cmd of displayList) {
     cmd.display(ctx);
@@ -94,6 +96,26 @@ app.appendChild(undoBtn);
 const redoBtn = document.createElement("button");
 redoBtn.textContent = "Redo";
 app.appendChild(redoBtn);
+
+const thinBtn = document.createElement("button");
+thinBtn.textContent = "Thin";
+app.appendChild(thinBtn);
+
+const thickBtn = document.createElement("button");
+thickBtn.textContent = "Thick";
+app.appendChild(thickBtn);
+
+thinBtn.addEventListener("click", () => {
+  currentLineWidth = 2;
+  thinBtn.classList.add("selectedTool");
+  thickBtn.classList.remove("selectedTool");
+});
+
+thickBtn.addEventListener("click", () => {
+  currentLineWidth = 8;
+  thickBtn.classList.add("selectedTool");
+  thinBtn.classList.remove("selectedTool");
+});
 
 clearBtn.addEventListener("click", () => {
   displayList.length = 0;
