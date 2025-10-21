@@ -80,7 +80,7 @@ canvas.addEventListener("drawing-changed", () => {
     cmd.display(ctx);
   }
   if (previewCommand && !currentCommand) {
-  previewCommand.display(ctx);
+    previewCommand.display(ctx);
   }
 });
 
