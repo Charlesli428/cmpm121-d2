@@ -13,16 +13,37 @@ app.appendChild(h1);
 const canvas = document.createElement("canvas");
 canvas.id = "stage";
 canvas.width = 256;
-canvas.height = 256;
+canvas.height = 257;
 app.appendChild(canvas);
 
 //Step 2
 const ctx = (canvas as HTMLCanvasElement).getContext("2d")!;
+interface DisplayCommand {
+  display(ctx: CanvasRenderingContext2D): void;
+}
+function makeLineCommand(): DisplayCommand & { points: Point[] } {
+  const points: Point[] = [];
+  return {
+    points,
+    display(ctx) {
+      if (points.length < 2) return;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke();
+    },
+  };
+}
 type Point = { x: number; y: number };
-type Stroke = Point[];
-const displayList: Stroke[] = [];
-let currentStroke: Stroke | null = null;
-const redoStack: Stroke[] = [];
+const displayList: DisplayCommand[] = [];
+let currentCommand: ReturnType<typeof makeLineCommand> | null = null;
+const redoStack: DisplayCommand[] = [];
 
 function dispatchDrawingChanged() {
   canvas.dispatchEvent(new Event("drawing-changed"));
@@ -36,35 +57,30 @@ canvas.addEventListener("drawing-changed", () => {
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
 
-  for (const stroke of displayList) {
-    if (stroke.length < 2) continue;
-    ctx.beginPath();
-    ctx.moveTo(stroke[0].x, stroke[0].y);
-    for (let i = 1; i < stroke.length; i++) {
-      ctx.lineTo(stroke[i].x, stroke[i].y);
-    }
-    ctx.stroke();
+  for (const cmd of displayList) {
+    cmd.display(ctx);
   }
 });
 
 canvas.addEventListener("mousedown", (e) => {
-  currentStroke = [{ x: e.offsetX, y: e.offsetY }];
-  displayList.push(currentStroke);
+  currentCommand = makeLineCommand();
+  currentCommand.points.push({ x: e.offsetX, y: e.offsetY });
+  displayList.push(currentCommand);
   dispatchDrawingChanged();
 });
 
 canvas.addEventListener("mousemove", (e) => {
-  if (!currentStroke) return;
-  currentStroke.push({ x: e.offsetX, y: e.offsetY });
+  if (!currentCommand) return;
+  currentCommand.points.push({ x: e.offsetX, y: e.offsetY });
   dispatchDrawingChanged();
 });
 
 canvas.addEventListener("mouseup", () => {
-  currentStroke = null;
+  currentCommand = null;
 });
 
 canvas.addEventListener("mouseleave", () => {
-  currentStroke = null;
+  currentCommand = null;
 });
 
 const clearBtn = document.createElement("button");
@@ -97,3 +113,4 @@ redoBtn.addEventListener("click", () => {
   displayList.push(restored);
   dispatchDrawingChanged();
 });
+//Committed Change
