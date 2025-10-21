@@ -41,9 +41,26 @@ function makeLineCommand(): DisplayCommand & { points: Point[] } {
     },
   };
 }
+function makePreviewCommand(x: number, y: number): DisplayCommand {
+  const radius = currentLineWidth / 2;
+  return {
+    display(ctx) {
+      ctx.save();
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = "#666";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    },
+  };
+}
 type Point = { x: number; y: number };
 const displayList: DisplayCommand[] = [];
 let currentCommand: ReturnType<typeof makeLineCommand> | null = null;
+let previewCommand: DisplayCommand | null = null;
+
 const redoStack: DisplayCommand[] = [];
 let currentLineWidth = 2;
 
@@ -62,6 +79,9 @@ canvas.addEventListener("drawing-changed", () => {
   for (const cmd of displayList) {
     cmd.display(ctx);
   }
+  if (previewCommand && !currentCommand) {
+  previewCommand.display(ctx);
+  }
 });
 
 canvas.addEventListener("mousedown", (e) => {
@@ -72,8 +92,11 @@ canvas.addEventListener("mousedown", (e) => {
 });
 
 canvas.addEventListener("mousemove", (e) => {
-  if (!currentCommand) return;
-  currentCommand.points.push({ x: e.offsetX, y: e.offsetY });
+  if (currentCommand) {
+    currentCommand.points.push({ x: e.offsetX, y: e.offsetY });
+  } else {
+    previewCommand = makePreviewCommand(e.offsetX, e.offsetY);
+  }
   dispatchDrawingChanged();
 });
 
@@ -83,6 +106,8 @@ canvas.addEventListener("mouseup", () => {
 
 canvas.addEventListener("mouseleave", () => {
   currentCommand = null;
+  previewCommand = null;
+  dispatchDrawingChanged();
 });
 
 const clearBtn = document.createElement("button");
