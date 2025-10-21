@@ -57,7 +57,11 @@ function makePreviewCommand(x: number, y: number): DisplayCommand {
     },
   };
 }
-function makeStickerCommand(x: number, y: number, emoji: string): DisplayCommand {
+function makeStickerCommand(
+  x: number,
+  y: number,
+  emoji: string,
+): DisplayCommand {
   return {
     display(ctx) {
       ctx.save();
