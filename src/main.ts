@@ -24,6 +24,7 @@ interface DisplayCommand {
 function makeLineCommand(): DisplayCommand & { points: Point[] } {
   const points: Point[] = [];
   const lineWidth = currentLineWidth;
+
   return {
     points,
     display(ctx) {
@@ -56,6 +57,18 @@ function makePreviewCommand(x: number, y: number): DisplayCommand {
     },
   };
 }
+function makeStickerCommand(x: number, y: number, emoji: string): DisplayCommand {
+  return {
+    display(ctx) {
+      ctx.save();
+      ctx.font = "24px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(emoji, x, y);
+      ctx.restore();
+    },
+  };
+}
 type Point = { x: number; y: number };
 const displayList: DisplayCommand[] = [];
 let currentCommand: ReturnType<typeof makeLineCommand> | null = null;
@@ -63,6 +76,8 @@ let previewCommand: DisplayCommand | null = null;
 
 const redoStack: DisplayCommand[] = [];
 let currentLineWidth = 2;
+let currentTool: "marker" | "sticker" = "marker";
+let currentSticker = "⭐";
 
 function dispatchDrawingChanged() {
   canvas.dispatchEvent(new Event("drawing-changed"));
@@ -85,15 +100,22 @@ canvas.addEventListener("drawing-changed", () => {
 });
 
 canvas.addEventListener("mousedown", (e) => {
-  currentCommand = makeLineCommand();
-  currentCommand.points.push({ x: e.offsetX, y: e.offsetY });
-  displayList.push(currentCommand);
+  if (currentTool === "marker") {
+    currentCommand = makeLineCommand();
+    currentCommand.points.push({ x: e.offsetX, y: e.offsetY });
+    displayList.push(currentCommand);
+  } else if (currentTool === "sticker") {
+    const cmd = makeStickerCommand(e.offsetX, e.offsetY, currentSticker);
+    displayList.push(cmd);
+  }
   dispatchDrawingChanged();
 });
 
 canvas.addEventListener("mousemove", (e) => {
   if (currentCommand) {
     currentCommand.points.push({ x: e.offsetX, y: e.offsetY });
+  } else if (currentTool === "sticker") {
+    previewCommand = makeStickerCommand(e.offsetX, e.offsetY, currentSticker);
   } else {
     previewCommand = makePreviewCommand(e.offsetX, e.offsetY);
   }
@@ -140,6 +162,21 @@ thickBtn.addEventListener("click", () => {
   currentLineWidth = 8;
   thickBtn.classList.add("selectedTool");
   thinBtn.classList.remove("selectedTool");
+});
+
+const stickers = ["⭐", "❤️", "😎"];
+stickers.forEach((emoji) => {
+  const btn = document.createElement("button");
+  btn.textContent = emoji;
+  app.appendChild(btn);
+
+  btn.addEventListener("click", () => {
+    currentTool = "sticker";
+    currentSticker = emoji;
+    // clear highlights
+    thinBtn.classList.remove("selectedTool");
+    thickBtn.classList.remove("selectedTool");
+  });
 });
 
 clearBtn.addEventListener("click", () => {
