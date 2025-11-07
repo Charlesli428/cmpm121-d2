@@ -57,7 +57,7 @@ function makePreviewCommand(x: number, y: number): DisplayCommand {
     },
   };
 }
-function makeStickerCommand(
+function makeemojiCommand(
   x: number,
   y: number,
   emoji: string,
@@ -80,8 +80,8 @@ let previewCommand: DisplayCommand | null = null;
 
 const redoStack: DisplayCommand[] = [];
 let currentLineWidth = 2;
-let currentTool: "marker" | "sticker" = "marker";
-let currentSticker = "⭐";
+let currentTool: "stroke" | "emoji" = "stroke";
+let currentemoji = "⭐";
 
 function dispatchDrawingChanged() {
   canvas.dispatchEvent(new Event("drawing-changed"));
@@ -104,12 +104,12 @@ canvas.addEventListener("drawing-changed", () => {
 });
 
 canvas.addEventListener("mousedown", (e) => {
-  if (currentTool === "marker") {
+  if (currentTool === "stroke") {
     currentCommand = makeLineCommand();
     currentCommand.points.push({ x: e.offsetX, y: e.offsetY });
     displayList.push(currentCommand);
-  } else if (currentTool === "sticker") {
-    const cmd = makeStickerCommand(e.offsetX, e.offsetY, currentSticker);
+  } else if (currentTool === "emoji") {
+    const cmd = makeemojiCommand(e.offsetX, e.offsetY, currentemoji);
     displayList.push(cmd);
   }
   dispatchDrawingChanged();
@@ -118,8 +118,8 @@ canvas.addEventListener("mousedown", (e) => {
 canvas.addEventListener("mousemove", (e) => {
   if (currentCommand) {
     currentCommand.points.push({ x: e.offsetX, y: e.offsetY });
-  } else if (currentTool === "sticker") {
-    previewCommand = makeStickerCommand(e.offsetX, e.offsetY, currentSticker);
+  } else if (currentTool === "emoji") {
+    previewCommand = makeemojiCommand(e.offsetX, e.offsetY, currentemoji);
   } else {
     previewCommand = makePreviewCommand(e.offsetX, e.offsetY);
   }
@@ -161,44 +161,44 @@ exportBtn.textContent = "Export";
 app.appendChild(exportBtn);
 
 thinBtn.addEventListener("click", () => {
-  currentLineWidth = 2;
+  currentLineWidth = 1;
   thinBtn.classList.add("selectedTool");
   thickBtn.classList.remove("selectedTool");
 });
 
 thickBtn.addEventListener("click", () => {
-  currentLineWidth = 8;
+  currentLineWidth = 13;
   thickBtn.classList.add("selectedTool");
   thinBtn.classList.remove("selectedTool");
 });
 
-const stickers: string[] = ["⭐", "❤️", "😎"];
+const emojis: string[] = ["🌸", "🔥", "🐱"];
 
-function addStickerButton(emoji: string) {
+function addemojiButton(emoji: string) {
   const btn = document.createElement("button");
   btn.textContent = emoji;
   app.appendChild(btn);
 
   btn.addEventListener("click", () => {
-    currentTool = "sticker";
-    currentSticker = emoji;
+    currentTool = "stroke";
+    currentemoji = emoji;
     thinBtn.classList.remove("selectedTool");
     thickBtn.classList.remove("selectedTool");
   });
 }
-stickers.forEach((emoji) => addStickerButton(emoji));
+emojis.forEach((emoji) => addemojiButton(emoji));
 
-const customStickerBtn = document.createElement("button");
-customStickerBtn.textContent = "Add Custom Sticker";
-app.appendChild(customStickerBtn);
+const customemojiBtn = document.createElement("button");
+customemojiBtn.textContent = "Add Custom emoji";
+app.appendChild(customemojiBtn);
 
-customStickerBtn.addEventListener("click", () => {
-  const text = prompt("Custom sticker text", "🧽");
+customemojiBtn.addEventListener("click", () => {
+  const text = prompt("Custom emoji text", "🧽");
   if (!text || text.trim() === "") return;
 
   const emoji = text.trim();
-  stickers.push(emoji);
-  addStickerButton(emoji);
+  emojis.push(emoji);
+  addemojiButton(emoji);
 });
 
 clearBtn.addEventListener("click", () => {
