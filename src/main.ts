@@ -24,7 +24,7 @@ interface DisplayCommand {
 function makeLineCommand(): DisplayCommand & { points: Point[] } {
   const points: Point[] = [];
   const lineWidth = currentLineWidth;
-
+  const strokeColor = currentColor;
   return {
     points,
     display(ctx) {
@@ -34,7 +34,7 @@ function makeLineCommand(): DisplayCommand & { points: Point[] } {
       for (let i = 1; i < points.length; i++) {
         ctx.lineTo(points[i].x, points[i].y);
       }
-      ctx.strokeStyle = "#000";
+      ctx.strokeStyle = strokeColor;
       ctx.lineWidth = lineWidth;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
@@ -42,6 +42,12 @@ function makeLineCommand(): DisplayCommand & { points: Point[] } {
     },
   };
 }
+
+function randomColor(): string {
+  const hue = Math.floor(Math.random() * 360);
+  return `hsl(${hue}, 100%, 40%)`;
+}
+
 function makePreviewCommand(x: number, y: number): DisplayCommand {
   const radius = currentLineWidth / 2;
   return {
@@ -50,7 +56,7 @@ function makePreviewCommand(x: number, y: number): DisplayCommand {
       ctx.globalAlpha = 0.6;
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = "#666";
+      ctx.strokeStyle = currentColor;
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.restore();
@@ -80,6 +86,7 @@ let previewCommand: DisplayCommand | null = null;
 
 const redoStack: DisplayCommand[] = [];
 let currentLineWidth = 2;
+let currentColor = "#000000";
 let currentTool: "stroke" | "emoji" = "stroke";
 let currentemoji = "⭐";
 
@@ -161,14 +168,19 @@ exportBtn.textContent = "Export";
 app.appendChild(exportBtn);
 
 thinBtn.addEventListener("click", () => {
+  currentTool = "stroke";
   currentLineWidth = 1;
+  currentColor = randomColor();
   thinBtn.classList.add("selectedTool");
   thickBtn.classList.remove("selectedTool");
 });
 
 thickBtn.addEventListener("click", () => {
+  currentTool = "stroke";
   currentLineWidth = 13;
+  currentColor = randomColor();
   thickBtn.classList.add("selectedTool");
+
   thinBtn.classList.remove("selectedTool");
 });
 
