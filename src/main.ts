@@ -168,8 +168,9 @@ thickBtn.addEventListener("click", () => {
   thinBtn.classList.remove("selectedTool");
 });
 
-const stickers = ["⭐", "❤️", "😎"];
-stickers.forEach((emoji) => {
+const stickers: string[] = ["⭐", "❤️", "😎"];
+
+function addStickerButton(emoji: string) {
   const btn = document.createElement("button");
   btn.textContent = emoji;
   app.appendChild(btn);
@@ -177,10 +178,23 @@ stickers.forEach((emoji) => {
   btn.addEventListener("click", () => {
     currentTool = "sticker";
     currentSticker = emoji;
-    // clear highlights
     thinBtn.classList.remove("selectedTool");
     thickBtn.classList.remove("selectedTool");
   });
+}
+stickers.forEach((emoji) => addStickerButton(emoji));
+
+const customStickerBtn = document.createElement("button");
+customStickerBtn.textContent = "Add Custom Sticker";
+app.appendChild(customStickerBtn);
+
+customStickerBtn.addEventListener("click", () => {
+  const text = prompt("Custom sticker text", "🧽");
+  if (!text || text.trim() === "") return;
+
+  const emoji = text.trim();
+  stickers.push(emoji);
+  addStickerButton(emoji);
 });
 
 clearBtn.addEventListener("click", () => {
