@@ -156,6 +156,10 @@ const thickBtn = document.createElement("button");
 thickBtn.textContent = "Thick";
 app.appendChild(thickBtn);
 
+const exportBtn = document.createElement("button");
+exportBtn.textContent = "Export";
+app.appendChild(exportBtn);
+
 thinBtn.addEventListener("click", () => {
   currentLineWidth = 2;
   thinBtn.classList.add("selectedTool");
@@ -214,5 +218,33 @@ redoBtn.addEventListener("click", () => {
   const restored = redoStack.pop()!;
   displayList.push(restored);
   dispatchDrawingChanged();
+});
+
+exportBtn.addEventListener("click", () => {
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = 1024;
+  exportCanvas.height = 1024;
+
+  const exportCtx = exportCanvas.getContext("2d")!;
+
+  exportCtx.fillStyle = "#ffffff";
+  exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+  const scaleX = exportCanvas.width / canvas.width;
+  const scaleY = exportCanvas.height / canvas.height;
+
+  exportCtx.save();
+  exportCtx.scale(scaleX, scaleY);
+
+  for (const cmd of displayList) {
+    cmd.display(exportCtx);
+  }
+
+  exportCtx.restore();
+
+  const anchor = document.createElement("a");
+  anchor.href = exportCanvas.toDataURL("image/png");
+  anchor.download = "sketchpad.png";
+  anchor.click();
 });
 //Committed Change
